@@ -16,6 +16,9 @@ $.fn.extend({
       onBlurValidationError: function(elem, valrule) {
         return console.log('blur err!');
       },
+      onEmpty: function(elem) {
+        return console.log('emptied');
+      },
       valrules: {
         fullname: {
           valfun: function(str) {
@@ -31,7 +34,7 @@ $.fn.extend({
           errormsg: 'You have to provide a full name, asshole!'
         }
       },
-      validateOnKeyUp: false,
+      validateOnKeyUp: true,
       validateOnBlur: true,
       validateOnSubmit: true
     };
@@ -50,15 +53,19 @@ $.fn.extend({
           if (settings.validateOnKeyUp) {
             minval = elem.data('minval');
             elem.on('keyup', function(e) {
-              if (e.which === 13) {
-                return e.preventDefault();
+              if (elem.val() === '') {
+                return settings.onEmpty(elem);
               } else {
-                if (minval != null) {
-                  if (elem.val().length >= parseInt(minval)) {
+                if (e.which === 13) {
+                  return e.preventDefault();
+                } else {
+                  if (minval != null) {
+                    if (elem.val().length >= parseInt(minval)) {
+                      return applyRule(elem, valrule, 'onKeyupValidation');
+                    }
+                  } else {
                     return applyRule(elem, valrule, 'onKeyupValidation');
                   }
-                } else {
-                  return applyRule(elem, valrule, 'onKeyupValidation');
                 }
               }
             });

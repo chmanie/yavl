@@ -17,6 +17,8 @@ $.fn.extend
         console.log('blur succ!')
       onBlurValidationError: (elem, valrule) ->
         console.log('blur err!')
+      onEmpty: (elem) ->
+        console.log('emptied')
 
       valrules: 
         fullname: 
@@ -33,7 +35,7 @@ $.fn.extend
         #   valfun
         #email:
         #  valfun:
-      validateOnKeyUp: false
+      validateOnKeyUp: true
       validateOnBlur: true
       validateOnSubmit: true
 
@@ -49,21 +51,24 @@ $.fn.extend
     return @each ()->
       
       watchForm = (elem) ->
-        # input form fields
+        # TODO: remove errors if field is empty
         valrule = settings.valrules[elem.data('valrule')]
         if valrule?
           # if keyup validation is activated
           if settings.validateOnKeyUp
             minval = elem.data('minval')
             elem.on 'keyup', (e) ->
-              if (e.which == 13)
-                e.preventDefault() # TODO: this does not work!
-              else 
-                if minval?
-                  if (elem.val().length >= parseInt(minval))
+              if elem.val() == ''
+                settings.onEmpty(elem)
+              else
+                if (e.which == 13)
+                  e.preventDefault() # TODO: this does not work!
+                else 
+                  if minval?
+                    if (elem.val().length >= parseInt(minval))
+                      applyRule(elem, valrule, 'onKeyupValidation')
+                  else
                     applyRule(elem, valrule, 'onKeyupValidation')
-                else
-                  applyRule(elem, valrule, 'onKeyupValidation')
 
           # if blur validation is activated
           if settings.validateOnBlur
