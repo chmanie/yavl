@@ -73,7 +73,8 @@ $.fn.extend
           # if blur validation is activated
           if settings.validateOnBlur
             elem.on 'blur', (e) ->
-              applyRule(elem, valrule, 'onBlurValidation')
+              if elem.val() != ''
+                applyRule(elem, valrule, 'onBlurValidation')
 
       applyRule = (elem, valrule, eventFunc) ->
         if(valrule.valfun((elem.val())))
