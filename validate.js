@@ -10,8 +10,12 @@ $.fn.extend({
       debug: false,
       onKeyupValidationSuccess: function(elem, valrule) {},
       onKeyupValidationError: function(elem, valrule) {},
-      onFocusOutValidationSuccess: function(elem, valrule) {},
-      onFocusOutValidationError: function(elem, valrule) {},
+      onBlurValidationSuccess: function(elem, valrule) {
+        return console.log('blur succ!');
+      },
+      onBlurValidationError: function(elem, valrule) {
+        return console.log('blur err!');
+      },
       valrules: {
         fullname: {
           valfun: function(str) {
@@ -26,7 +30,10 @@ $.fn.extend({
           successmsg: 'We got a full name! Awesome!',
           errormsg: 'You have to provide a full name, asshole!'
         }
-      }
+      },
+      validateOnKeyUp: false,
+      validateOnBlur: true,
+      validateOnSubmit: true
     };
     settings = $.extend(settings, options);
     log = function(msg) {
@@ -35,37 +42,39 @@ $.fn.extend({
       }
     };
     return this.each(function() {
-      var watchForm;
+      var applyRule, watchForm;
       watchForm = function(elem) {
         var minval, valrule;
-        if (!elem.is('select')) {
-          valrule = settings.valrules[elem.data('valrule')];
-          minval = elem.data('minval');
-          if (valrule != null) {
-            return elem.on('keyup', function(e) {
+        valrule = settings.valrules[elem.data('valrule')];
+        if (valrule != null) {
+          if (settings.validateOnKeyUp) {
+            minval = elem.data('minval');
+            elem.on('keyup', function(e) {
               if (e.which === 13) {
                 return e.preventDefault();
               } else {
                 if (minval != null) {
                   if (elem.val().length >= parseInt(minval)) {
-                    if (valrule.valfun(elem.val())) {
-                      settings.onKeyupValidationSuccess(elem, valrule);
-                      return console.log('success triggered');
-                    } else {
-                      settings.onKeyupValidationError(elem, valrule);
-                      return console.log('error triggered');
-                    }
+                    return applyRule(elem, valrule, 'onKeyupValidation');
                   }
                 } else {
-                  if (valrule.valfun(elem.val())) {
-                    return settings.onKeyupValidationSuccess(elem, valrule);
-                  } else {
-                    return settings.onKeyupValidationError(elem, valrule);
-                  }
+                  return applyRule(elem, valrule, 'onKeyupValidation');
                 }
               }
             });
           }
+          if (settings.validateOnBlur) {
+            return elem.on('blur', function(e) {
+              return applyRule(elem, valrule, 'onBlurValidation');
+            });
+          }
+        }
+      };
+      applyRule = function(elem, valrule, eventFunc) {
+        if (valrule.valfun(elem.val())) {
+          return settings[eventFunc + 'Success'](elem, valrule);
+        } else {
+          return settings[eventFunc + 'Error'](elem, valrule);
         }
       };
       log("Preparing magic show.");

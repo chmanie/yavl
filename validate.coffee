@@ -13,12 +13,15 @@ $.fn.extend
       debug: false
       onKeyupValidationSuccess: (elem, valrule) ->
       onKeyupValidationError: (elem, valrule) ->
-      onFocusOutValidationSuccess: (elem, valrule) ->
-      onFocusOutValidationError: (elem, valrule) ->
+      onBlurValidationSuccess: (elem, valrule) ->
+        console.log('blur succ!')
+      onBlurValidationError: (elem, valrule) ->
+        console.log('blur err!')
 
       valrules: 
         fullname: 
           valfun: (str) ->
+            # dash ( - ) !!!
             exp = /^[a-zA-ZÖÜÄßöüäøñ]{2,}(\s[a-zA-ZÖÜÄßöüäøñ]{2,}){1,3}$/ # Two words with two or more characters (Umlauts and some other crazy letters are allowed)
             if(str.match(exp) != null)
               return true
@@ -26,8 +29,13 @@ $.fn.extend
               return false
           successmsg: 'We got a full name! Awesome!'
           errormsg: 'You have to provide a full name, asshole!'
+        #minchars: 
+        #   valfun
         #email:
         #  valfun:
+      validateOnKeyUp: false
+      validateOnBlur: true
+      validateOnSubmit: true
 
 
     # Merge default settings with options.
@@ -41,34 +49,32 @@ $.fn.extend
     return @each ()->
       
       watchForm = (elem) ->
-        # start event listeners?
-        # here
         # input form fields
-        if (!elem.is('select'))
-          valrule = settings.valrules[elem.data('valrule')]
-          minval = elem.data('minval')
-          if valrule?
-            # if keyup validation is activated
+        valrule = settings.valrules[elem.data('valrule')]
+        if valrule?
+          # if keyup validation is activated
+          if settings.validateOnKeyUp
+            minval = elem.data('minval')
             elem.on 'keyup', (e) ->
               if (e.which == 13)
                 e.preventDefault() # TODO: this does not work!
               else 
                 if minval?
                   if (elem.val().length >= parseInt(minval))
-                  # startValidation
-                    # factor out the following (e.g. applyRule())
-                    if(valrule.valfun((elem.val()))) # TODO: validate more than one rule at once
-                      settings.onKeyupValidationSuccess(elem, valrule)
-                      console.log('success triggered')
-                    else
-                      settings.onKeyupValidationError(elem, valrule)
-                      console.log('error triggered')
+                    applyRule(elem, valrule, 'onKeyupValidation')
                 else
-                  # validateAnyway
-                  if(valrule.valfun((elem.val())))
-                    settings.onKeyupValidationSuccess(elem, valrule)
-                  else
-                    settings.onKeyupValidationError(elem, valrule)
+                  applyRule(elem, valrule, 'onKeyupValidation')
+
+          # if blur validation is activated
+          if settings.validateOnBlur
+            elem.on 'blur', (e) ->
+              applyRule(elem, valrule, 'onBlurValidation')
+
+      applyRule = (elem, valrule, eventFunc) ->
+        if(valrule.valfun((elem.val())))
+          settings[eventFunc + 'Success'](elem, valrule)
+        else
+          settings[eventFunc + 'Error'](elem, valrule)
 
       # on: keyup: just change class (red, green border)
       # on focus out: do a popup if validation fails
