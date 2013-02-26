@@ -7,7 +7,26 @@ $.fn.extend({
   validate: function(options) {
     var log, settings;
     settings = {
-      debug: false
+      debug: false,
+      onKeyupValidationSuccess: function(elem, valrule) {},
+      onKeyupValidationError: function(elem, valrule) {},
+      onFocusOutValidationSuccess: function(elem, valrule) {},
+      onFocusOutValidationError: function(elem, valrule) {},
+      valrules: {
+        fullname: {
+          valfun: function(str) {
+            var exp;
+            exp = /^[a-zA-ZÖÜÄßöüäøñ]{2,}(\s[a-zA-ZÖÜÄßöüäøñ]{2,}){1,3}$/;
+            if (str.match(exp) !== null) {
+              return true;
+            } else {
+              return false;
+            }
+          },
+          successmsg: 'We got a full name! Awesome!',
+          errormsg: 'You have to provide a full name, asshole!'
+        }
+      }
     };
     settings = $.extend(settings, options);
     log = function(msg) {
@@ -16,36 +35,41 @@ $.fn.extend({
       }
     };
     return this.each(function() {
-      var valrules, watchForm;
-      valrules = {
-        fullname: function(str) {
-          var exp;
-          exp = /[a-zA-ZÖÜÄßöüäø]{2,}\s[a-zA-ZÖÜÄßöüäø]{2,}/;
-          if (str.match(exp) !== null) {
-            return true;
-          } else {
-            return false;
+      var watchForm;
+      watchForm = function(elem) {
+        var minval, valrule;
+        if (!elem.is('select')) {
+          valrule = settings.valrules[elem.data('valrule')];
+          minval = elem.data('minval');
+          if (valrule != null) {
+            return elem.on('keyup', function(e) {
+              if (e.which === 13) {
+                return e.preventDefault();
+              } else {
+                if (minval != null) {
+                  if (elem.val().length >= parseInt(minval)) {
+                    if (valrule.valfun(elem.val())) {
+                      settings.onKeyupValidationSuccess(elem, valrule);
+                      return console.log('success triggered');
+                    } else {
+                      settings.onKeyupValidationError(elem, valrule);
+                      return console.log('error triggered');
+                    }
+                  }
+                } else {
+                  if (valrule.valfun(elem.val())) {
+                    return settings.onKeyupValidationSuccess(elem, valrule);
+                  } else {
+                    return settings.onKeyupValidationError(elem, valrule);
+                  }
+                }
+              }
+            });
           }
         }
       };
-      watchForm = function(elem) {
-        if (!elem.is('select')) {
-          return elem.on('keyup', function(e) {
-            if (e.which === 13) {
-              e.preventDefault();
-            }
-            if (e.which !== 8) {
-              if (elem.val().length > parseInt(elem.data('minval'))) {
-                if (valrules[elem.data('valrule')](elem.val())) {
-                  return alert('we got a Full name!!! this is awesome');
-                }
-              }
-            }
-          });
-        }
-      };
       log("Preparing magic show.");
-      return $(this).children('input, select, textarea').each(function(i) {
+      return $(this).find('input, select, textarea').each(function(i) {
         return watchForm($(this));
       });
     });

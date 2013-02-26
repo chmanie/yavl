@@ -7,11 +7,28 @@ $ = jQuery
 
 # Adds plugin object to jQuery
 $.fn.extend
-  # Change pluginName to your plugin's name.
   validate: (options) ->
     # Default settings
     settings =
       debug: false
+      onKeyupValidationSuccess: (elem, valrule) ->
+      onKeyupValidationError: (elem, valrule) ->
+      onFocusOutValidationSuccess: (elem, valrule) ->
+      onFocusOutValidationError: (elem, valrule) ->
+
+      valrules: 
+        fullname: 
+          valfun: (str) ->
+            exp = /^[a-zA-ZÖÜÄßöüäøñ]{2,}(\s[a-zA-ZÖÜÄßöüäøñ]{2,}){1,3}$/ # Two words with two or more characters (Umlauts and some other crazy letters are allowed)
+            if(str.match(exp) != null)
+              return true
+            else
+              return false
+          successmsg: 'We got a full name! Awesome!'
+          errormsg: 'You have to provide a full name, asshole!'
+        #email:
+        #  valfun:
+
 
     # Merge default settings with options.
     settings = $.extend settings, options
@@ -22,35 +39,43 @@ $.fn.extend
 
     # _Insert magic here._
     return @each ()->
-
-      valrules = 
-        fullname: (str) ->
-          exp = /[a-zA-ZÖÜÄßöüäø]{2,}\s[a-zA-ZÖÜÄßöüäø]{2,}/ # Two words with two or more characters (Umlauts and some other crazy letters are allowed)
-          if(str.match(exp) != null)
-            return true
-          else
-            return false
       
       watchForm = (elem) ->
+        # start event listeners?
+        # here
         # input form fields
         if (!elem.is('select'))
-          # TODO factor out start
-          elem.on 'keyup', (e) ->
-            if (e.which == 13)
-              e.preventDefault() # TODO does not work!
-            if (e.which != 8)
-          # factor out end
-              if (elem.val().length > parseInt(elem.data('minval')))
-                # startValidation
-                if(valrules[elem.data('valrule')](elem.val()))
-                  alert('we got a Full name!!! this is awesome')
+          valrule = settings.valrules[elem.data('valrule')]
+          minval = elem.data('minval')
+          if valrule?
+            # if keyup validation is activated
+            elem.on 'keyup', (e) ->
+              if (e.which == 13)
+                e.preventDefault() # TODO: this does not work!
+              else 
+                if minval?
+                  if (elem.val().length >= parseInt(minval))
+                  # startValidation
+                    # factor out the following (e.g. applyRule())
+                    if(valrule.valfun((elem.val()))) # TODO: validate more than one rule at once
+                      settings.onKeyupValidationSuccess(elem, valrule)
+                      console.log('success triggered')
+                    else
+                      settings.onKeyupValidationError(elem, valrule)
+                      console.log('error triggered')
+                else
+                  # validateAnyway
+                  if(valrule.valfun((elem.val())))
+                    settings.onKeyupValidationSuccess(elem, valrule)
+                  else
+                    settings.onKeyupValidationError(elem, valrule)
 
       # on: keyup: just change class (red, green border)
       # on focus out: do a popup if validation fails
 
       log "Preparing magic show."
       
-      $(this).children('input, select, textarea').each((i) ->
+      $(this).find('input, select, textarea').each((i) ->
         watchForm($(this))
       )
       
