@@ -8,12 +8,16 @@ $.fn.extend({
     var log, settings;
     settings = {
       debug: false,
-      onKeyupValidationSuccess: function(elem, valrule) {},
-      onKeyupValidationError: function(elem, valrule) {},
-      onBlurValidationSuccess: function(elem, valrule) {
+      onKeyupValidationSuccess: function(elem, messages) {
+        return log(messages);
+      },
+      onKeyupValidationError: function(elem, messages) {
+        return log(messages);
+      },
+      onBlurValidationSuccess: function(elem, messages) {
         return console.log('blur succ!');
       },
-      onBlurValidationError: function(elem, valrule) {
+      onBlurValidationError: function(elem, messages) {
         return console.log('blur err!');
       },
       onEmpty: function(elem) {
@@ -23,8 +27,8 @@ $.fn.extend({
         fullname: {
           valfun: function(str) {
             var exp;
-            exp = /^[a-zA-ZÖÜÄßöüäøñ]{2,}(\s[a-zA-ZÖÜÄßöüäøñ]{2,}){1,3}$/;
-            if (str.match(exp) !== null) {
+            exp = /^[a-zA-ZàáâäãåèéêëìíîïòóôöõøùúûüÿýñçčšžÀÁÂÄÃÅÈÉÊËÌÍÎÏÒÓÔÖÕØÙÚÛÜŸÝÑßÇŒÆČŠŽ∂ð ,.'-]+$/;
+            if (str.match(exp) != null) {
               return true;
             } else {
               return false;
@@ -45,7 +49,7 @@ $.fn.extend({
           errormsg: 'You have to fill this, man!'
         }
       },
-      validateOnKeyUp: false,
+      validateOnKeyup: false,
       validateOnBlur: true,
       validateOnSubmit: true
     };
@@ -62,13 +66,13 @@ $.fn.extend({
         valrules = elem.data('valrules');
         if (valrules != null) {
           valrules = elem.data('valrules').split(' ');
-          if (settings.validateOnKeyUp) {
+          if (settings.validateOnKeyup) {
             minval = elem.data('minval');
             elem.on('keyup', function(e) {
               if (elem.val() === '') {
                 return settings.onEmpty(elem);
               } else {
-                if (e.which === 13) {
+                if (e.which === 13 || e.which === 16) {
                   return e.preventDefault();
                 } else {
                   if (minval != null) {
@@ -84,37 +88,42 @@ $.fn.extend({
           }
           if (settings.validateOnBlur) {
             return elem.on('blur', function(e) {
-              console.log('blur fired');
               if (elem.val() !== '') {
                 return applyRules(elem, valrules, 'onBlurValidation');
+              } else {
+                return settings.onEmpty(elem);
               }
             });
           }
         }
       };
       applyRules = function(elem, valrules, eventFunc) {
-        var failed;
+        var messages;
         valrules = valrules.map(function(valrule) {
           return settings.valrules[valrule];
         });
-        failed = failedFuncs(valrules, elem.val());
-        if (failed.length === 0) {
-          return settings[eventFunc + 'Success'](elem, valrules);
+        messages = failedFuncs(valrules, elem);
+        if (messages.failed.length === 0) {
+          return settings[eventFunc + 'Success'](elem, messages);
         } else {
-          return settings[eventFunc + 'Error'](elem, failed);
+          return settings[eventFunc + 'Error'](elem, messages);
         }
       };
-      failedFuncs = function(valrules, param) {
-        var failed, valrule, _i, _len;
-        failed = [];
+      failedFuncs = function(valrules, elem) {
+        var messages, valrule, _i, _len;
+        messages = {
+          success: [],
+          failed: []
+        };
         for (_i = 0, _len = valrules.length; _i < _len; _i++) {
           valrule = valrules[_i];
-          if (valrule.valfun(param) === false) {
-            failed.push(valrule);
+          if (valrule.valfun(elem.val(), elem) === false) {
+            messages.failed.push(valrule.errormsg);
+          } else {
+            messages.success.push(valrule.successmsg);
           }
         }
-        console.log(failed);
-        return failed;
+        return messages;
       };
       log("Preparing magic show.");
       return $(this).find('input, select, textarea').each(function(i) {
