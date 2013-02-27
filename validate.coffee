@@ -74,7 +74,7 @@ $.fn.extend
         valObj = @
         @elem.on 'keyup', (e) ->
           if valObj.elem.val() == ''
-            settings.onEmpty(@elem)
+            settings.onEmpty(valObj.elem)
           else
             if (e.which == 13 or e.which == 16)
               e.preventDefault() # TODO: this does not work!
