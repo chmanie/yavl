@@ -25,17 +25,25 @@ $.fn.extend
           valfun: (str) ->
             # dash ( - ) !!!
             exp = /^[a-zA-ZÖÜÄßöüäøñ]{2,}(\s[a-zA-ZÖÜÄßöüäøñ]{2,}){1,3}$/ # Two words with two or more characters (Umlauts and some other crazy letters are allowed)
-            if(str.match(exp) != null)
+            if(str.match(exp) != null) # TODO: abkürzen ? :
               return true
             else
               return false
           successmsg: 'We got a full name! Awesome!'
           errormsg: 'You have to provide a full name, asshole!'
+        required:
+          valfun: (str) ->
+            if str.length < 1 # TODO: abkürzen ? :
+              return false
+            else
+              return true
+          successmsg: 'You were right, this is fuckin required'
+          errormsg: 'You have to fill this, man!'
         #minchars: 
         #   valfun
         #email:
         #  valfun:
-      validateOnKeyUp: true
+      validateOnKeyUp: false
       validateOnBlur: true
       validateOnSubmit: true
 
@@ -52,8 +60,9 @@ $.fn.extend
       
       watchForm = (elem) ->
         # TODO: remove errors if field is empty
-        valrule = settings.valrules[elem.data('valrule')]
-        if valrule?
+        valrules = elem.data('valrules')
+        if valrules?
+          valrules = elem.data('valrules').split(' ')
           # if keyup validation is activated
           if settings.validateOnKeyUp
             minval = elem.data('minval')
@@ -66,21 +75,33 @@ $.fn.extend
                 else 
                   if minval?
                     if (elem.val().length >= parseInt(minval))
-                      applyRule(elem, valrule, 'onKeyupValidation')
+                      applyRules(elem, valrules, 'onKeyupValidation')
                   else
-                    applyRule(elem, valrule, 'onKeyupValidation')
+                    applyRules(elem, valrules, 'onKeyupValidation')
 
           # if blur validation is activated
           if settings.validateOnBlur
             elem.on 'blur', (e) ->
+              console.log('blur fired')
               if elem.val() != ''
-                applyRule(elem, valrule, 'onBlurValidation')
+                applyRules(elem, valrules, 'onBlurValidation')
 
-      applyRule = (elem, valrule, eventFunc) ->
-        if(valrule.valfun((elem.val())))
-          settings[eventFunc + 'Success'](elem, valrule)
+      applyRules = (elem, valrules, eventFunc) ->
+        valrules = valrules.map (valrule) -> settings.valrules[valrule]
+        failed = failedFuncs(valrules, elem.val())
+        if(failed.length == 0)
+          settings[eventFunc + 'Success'](elem, valrules)
         else
-          settings[eventFunc + 'Error'](elem, valrule)
+          # es müssen die errors übermittelt werden
+          settings[eventFunc + 'Error'](elem, failed)
+
+      failedFuncs = (valrules, param) ->
+        failed = []
+        for valrule in valrules
+          if valrule.valfun(param) is false
+            failed.push(valrule) #evtl nur die msg?
+        console.log(failed)
+        return failed
 
       # on: keyup: just change class (red, green border)
       # on focus out: do a popup if validation fails

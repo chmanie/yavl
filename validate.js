@@ -32,9 +32,20 @@ $.fn.extend({
           },
           successmsg: 'We got a full name! Awesome!',
           errormsg: 'You have to provide a full name, asshole!'
+        },
+        required: {
+          valfun: function(str) {
+            if (str.length < 1) {
+              return false;
+            } else {
+              return true;
+            }
+          },
+          successmsg: 'You were right, this is fuckin required',
+          errormsg: 'You have to fill this, man!'
         }
       },
-      validateOnKeyUp: true,
+      validateOnKeyUp: false,
       validateOnBlur: true,
       validateOnSubmit: true
     };
@@ -45,11 +56,12 @@ $.fn.extend({
       }
     };
     return this.each(function() {
-      var applyRule, watchForm;
+      var applyRules, failedFuncs, watchForm;
       watchForm = function(elem) {
-        var minval, valrule;
-        valrule = settings.valrules[elem.data('valrule')];
-        if (valrule != null) {
+        var minval, valrules;
+        valrules = elem.data('valrules');
+        if (valrules != null) {
+          valrules = elem.data('valrules').split(' ');
           if (settings.validateOnKeyUp) {
             minval = elem.data('minval');
             elem.on('keyup', function(e) {
@@ -61,10 +73,10 @@ $.fn.extend({
                 } else {
                   if (minval != null) {
                     if (elem.val().length >= parseInt(minval)) {
-                      return applyRule(elem, valrule, 'onKeyupValidation');
+                      return applyRules(elem, valrules, 'onKeyupValidation');
                     }
                   } else {
-                    return applyRule(elem, valrule, 'onKeyupValidation');
+                    return applyRules(elem, valrules, 'onKeyupValidation');
                   }
                 }
               }
@@ -72,19 +84,37 @@ $.fn.extend({
           }
           if (settings.validateOnBlur) {
             return elem.on('blur', function(e) {
+              console.log('blur fired');
               if (elem.val() !== '') {
-                return applyRule(elem, valrule, 'onBlurValidation');
+                return applyRules(elem, valrules, 'onBlurValidation');
               }
             });
           }
         }
       };
-      applyRule = function(elem, valrule, eventFunc) {
-        if (valrule.valfun(elem.val())) {
-          return settings[eventFunc + 'Success'](elem, valrule);
+      applyRules = function(elem, valrules, eventFunc) {
+        var failed;
+        valrules = valrules.map(function(valrule) {
+          return settings.valrules[valrule];
+        });
+        failed = failedFuncs(valrules, elem.val());
+        if (failed.length === 0) {
+          return settings[eventFunc + 'Success'](elem, valrules);
         } else {
-          return settings[eventFunc + 'Error'](elem, valrule);
+          return settings[eventFunc + 'Error'](elem, failed);
         }
+      };
+      failedFuncs = function(valrules, param) {
+        var failed, valrule, _i, _len;
+        failed = [];
+        for (_i = 0, _len = valrules.length; _i < _len; _i++) {
+          valrule = valrules[_i];
+          if (valrule.valfun(param) === false) {
+            failed.push(valrule);
+          }
+        }
+        console.log(failed);
+        return failed;
       };
       log("Preparing magic show.");
       return $(this).find('input, select, textarea').each(function(i) {
