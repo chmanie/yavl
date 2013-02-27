@@ -13,22 +13,15 @@ $.fn.extend
     # Default settings
     settings =
       debug: false
-      onKeyupValidationSuccess: (elem, messages) ->
-        log messages
-      onKeyupValidationError: (elem, messages) ->
-        log messages
+      onKeyUpValidationSuccess: (elem, messages) ->
+      onKeyUpValidationError: (elem, messages) ->
       onBlurValidationSuccess: (elem, messages) ->
-        console.log('blur succ!')
       onBlurValidationError: (elem, messages) ->
-        console.log('blur err!')
       onEmpty: (elem) ->
-        console.log('emptied')
 
-
-      validateOnKeyUp: true
+      validateOnKeyUp: false
       validateOnBlur: true
       validateOnSubmit: true
-
 
     # Merge default settings with options.
     settings = $.extend settings, options
@@ -49,8 +42,6 @@ $.fn.extend
           @startBlurValidation()
         if settings.validateOnSubmit
           @startSubmitValidation()
-        log @valFuncs
-        log @minval
 
       parseValFuncs: () ->
         valFuncs = {}
@@ -134,15 +125,17 @@ constraints =
       return if str.length >= parseInt(ml) then true else false
     successmsg: 'Yeah!'
     errormsg: 'Sorry, minimal length is ' + ml + ' characters'
-  #minchars: 
-  #   valfun
-  #email:
-  #  valfun:
+
+  fullname: () ->
+    valfun: (str) ->
+      # Full name with hyphens, Umlauts and some other crazy letters
+      exp = /^[a-zA-ZàáâäãåèéêëìíîïòóôöõøùúûüÿýñçčšžÀÁÂÄÃÅÈÉÊËÌÍÎÏÒÓÔÖÕØÙÚÛÜŸÝÑßÇŒÆČŠŽ∂ð ,.'-]+$/
+      return if str.match(exp)? then true else false
+    successmsg: 'Great!'
+    errormsg: 'Please provide a full name.'
 
   regexp: (exp) ->
     valfun: (str) ->
-      # Full name with hyphens, Umlauts and some other crazy letters
-      # exp = /^[a-zA-ZàáâäãåèéêëìíîïòóôöõøùúûüÿýñçčšžÀÁÂÄÃÅÈÉÊËÌÍÎÏÒÓÔÖÕØÙÚÛÜŸÝÑßÇŒÆČŠŽ∂ð ,.'-]+$/
       return if str.match(exp)? then true else false
     successmsg: 'Great!'
     errormsg: 'Something is wrong!'

@@ -8,22 +8,12 @@ $.fn.extend({
     var log, settings, validationObj;
     settings = {
       debug: false,
-      onKeyupValidationSuccess: function(elem, messages) {
-        return log(messages);
-      },
-      onKeyupValidationError: function(elem, messages) {
-        return log(messages);
-      },
-      onBlurValidationSuccess: function(elem, messages) {
-        return console.log('blur succ!');
-      },
-      onBlurValidationError: function(elem, messages) {
-        return console.log('blur err!');
-      },
-      onEmpty: function(elem) {
-        return console.log('emptied');
-      },
-      validateOnKeyUp: true,
+      onKeyupValidationSuccess: function(elem, messages) {},
+      onKeyupValidationError: function(elem, messages) {},
+      onBlurValidationSuccess: function(elem, messages) {},
+      onBlurValidationError: function(elem, messages) {},
+      onEmpty: function(elem) {},
+      validateOnKeyUp: false,
       validateOnBlur: true,
       validateOnSubmit: true
     };
@@ -49,8 +39,6 @@ $.fn.extend({
         if (settings.validateOnSubmit) {
           this.startSubmitValidation();
         }
-        log(this.valFuncs);
-        log(this.minval);
       }
 
       validationObj.prototype.parseValFuncs = function() {
@@ -191,6 +179,21 @@ constraints = {
       },
       successmsg: 'Yeah!',
       errormsg: 'Sorry, minimal length is ' + ml + ' characters'
+    };
+  },
+  fullname: function() {
+    return {
+      valfun: function(str) {
+        var exp;
+        exp = /^[a-zA-ZàáâäãåèéêëìíîïòóôöõøùúûüÿýñçčšžÀÁÂÄÃÅÈÉÊËÌÍÎÏÒÓÔÖÕØÙÚÛÜŸÝÑßÇŒÆČŠŽ∂ð ,.'-]+$/;
+        if (str.match(exp) != null) {
+          return true;
+        } else {
+          return false;
+        }
+      },
+      successmsg: 'Great!',
+      errormsg: 'Please provide a full name.'
     };
   },
   regexp: function(exp) {
