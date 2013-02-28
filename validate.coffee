@@ -36,6 +36,8 @@ valConstraints =
 
   email: () ->
     valfun: (str) ->
+      # very simple regex for email validation
+      # read: http://davidcel.is/blog/2012/09/06/stop-validating-email-addresses-with-regex/
       exp = /^(.{1,})@(.{1,})\.(.{1,})$/
       return if str.match(exp)? then true else false
     successmsg: valMessages.email.successmsg
@@ -65,17 +67,30 @@ $.fn.extend
     settings =
       debug: false
       onKeyUpValidationSuccess: (elem, messages) ->
+        # function is invoked if KeyUp validation was successful
       onKeyUpValidationError: (elem, messages) ->
+        # function is invoked if KeyUp validation caused an error
       onBlurValidationSuccess: (elem, messages) ->
+        # function is invoked if validation after blur was successful
       onBlurValidationError: (elem, messages) ->
-      onSubmitValidationSuccess: (elem, messages) ->
-      onSubmitValidationError: (elem, messages) ->
+        # function is invoked if validation after caused an error
+      onSubmitElemValidationSuccess: (elem, messages) ->
+        # function is invoked on if validation of a specific element after submit was successful
+      onSubmitElemValidationError: (elem, messages) ->
+        # function is invoked on if validation of a specific element after submit caused an error
+      onSubmitValidationSuccess: () ->
+        # function is invoked if everything is fine after submit
+      onSubmitValidationError: () ->
+        # function is invoked if there is one or more error in the form
       onEmpty: (elem) ->
+        # function is invoked if element was emptied (after blur or keyUp)
 
       validateOnKeyUp: false
       validateOnBlur: true
       validateOnSubmit: true
 
+      # defines wether the form's standard http POST functionality is used
+      # you can specify your own actions on successful validation in onSubmitValidationSuccess()
       useFormPOST: true
 
     # Merge default settings with options.
@@ -164,15 +179,28 @@ $.fn.extend
 
       if settings.validateOnSubmit
         $(this).on('submit', (e) ->
-          if(!applyAllRules(validationObjects) || !settings.useFormPOST)
+          # apply rules to all elements
+          if(!applyAllRules(validationObjects))
+            # one or more element validations failed
             e.preventDefault()
+            settings.onSubmitValidationError()
+          else
+            if(!settings.useFormPOST)
+              # user does not want to use the form's http POST
+              e.preventDefault()
+              settings.onSubmitValidationSuccess()
+            else
+              # invoke function when everything is fine
+              settings.onSubmitValidationSuccess()
         )
 
       applyAllRules = (validationObjects) ->
+        success = true
         for valObj in validationObjects
-          if !valObj.applyRules('onSubmitValidation')
-            return false
-        return true
+          if !valObj.applyRules('onSubmitElemValidation')
+            success = false
+        # false if one or more validations failed
+        return success
 
 isInObj = (aKey, obj) ->
   for key, val of obj

@@ -109,8 +109,10 @@ $.fn.extend({
       onKeyUpValidationError: function(elem, messages) {},
       onBlurValidationSuccess: function(elem, messages) {},
       onBlurValidationError: function(elem, messages) {},
-      onSubmitValidationSuccess: function(elem, messages) {},
-      onSubmitValidationError: function(elem, messages) {},
+      onSubmitElemValidationSuccess: function(elem, messages) {},
+      onSubmitElemValidationError: function(elem, messages) {},
+      onSubmitValidationSuccess: function() {},
+      onSubmitValidationError: function() {},
       onEmpty: function(elem) {},
       validateOnKeyUp: false,
       validateOnBlur: true,
@@ -240,20 +242,29 @@ $.fn.extend({
       });
       if (settings.validateOnSubmit) {
         $(this).on('submit', function(e) {
-          if (!applyAllRules(validationObjects) || !settings.useFormPOST) {
-            return e.preventDefault();
+          if (!applyAllRules(validationObjects)) {
+            e.preventDefault();
+            return settings.onSubmitValidationError();
+          } else {
+            if (!settings.useFormPOST) {
+              e.preventDefault();
+              return settings.onSubmitValidationSuccess();
+            } else {
+              return settings.onSubmitValidationSuccess();
+            }
           }
         });
       }
       return applyAllRules = function(validationObjects) {
-        var valObj, _i, _len;
+        var success, valObj, _i, _len;
+        success = true;
         for (_i = 0, _len = validationObjects.length; _i < _len; _i++) {
           valObj = validationObjects[_i];
-          if (!valObj.applyRules('onSubmitValidation')) {
-            return false;
+          if (!valObj.applyRules('onSubmitElemValidation')) {
+            success = false;
           }
         }
-        return true;
+        return success;
       };
     });
   }

@@ -16,7 +16,7 @@ valMessages = {
   },
   fullname: {
     successmsg: 'Spitze!',
-    errormsg: 'Bitte gibt Deinen vollen Namen ein.'
+    errormsg: 'Bitte gib Deinen vollen Namen ein.'
   },
   regexp: {
     successmsg: 'Super!',
