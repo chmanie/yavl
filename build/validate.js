@@ -56,8 +56,8 @@ valConstraints = {
   email: function() {
     return {
       valfun: function(str) {
-        var epx;
-        epx = /^(.*)@(.*)\.(.*)$/;
+        var exp;
+        exp = /^(.*)@(.*)\.(.*)$/;
         if (str.match(exp) != null) {
           return true;
         } else {
