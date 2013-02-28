@@ -36,7 +36,7 @@ valConstraints =
 
   email: () ->
     valfun: (str) ->
-      exp = /^(.*)@(.*)\.(.*)$/
+      exp = /^(.{1,})@(.{1,})\.(.{1,})$/
       return if str.match(exp)? then true else false
     successmsg: valMessages.email.successmsg
     errormsg: valMessages.email.errormsg

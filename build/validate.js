@@ -57,7 +57,7 @@ valConstraints = {
     return {
       valfun: function(str) {
         var exp;
-        exp = /^(.*)@(.*)\.(.*)$/;
+        exp = /^(.{1,})@(.{1,})\.(.{1,})$/;
         if (str.match(exp) != null) {
           return true;
         } else {
