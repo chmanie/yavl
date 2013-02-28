@@ -5,17 +5,20 @@ $ = jQuery;
 
 $.fn.extend({
   validate: function(options) {
-    var log, settings, validationObj;
+    var ValidationObj, log, settings;
     settings = {
       debug: false,
-      onKeyupValidationSuccess: function(elem, messages) {},
-      onKeyupValidationError: function(elem, messages) {},
+      onKeyUpValidationSuccess: function(elem, messages) {},
+      onKeyUpValidationError: function(elem, messages) {},
       onBlurValidationSuccess: function(elem, messages) {},
       onBlurValidationError: function(elem, messages) {},
+      onSubmitValidationSuccess: function(elem, messages) {},
+      onSubmitValidationError: function(elem, messages) {},
       onEmpty: function(elem) {},
       validateOnKeyUp: false,
       validateOnBlur: true,
-      validateOnSubmit: true
+      validateOnSubmit: true,
+      useFormPOST: true
     };
     settings = $.extend(settings, options);
     log = function(msg) {
@@ -23,9 +26,9 @@ $.fn.extend({
         return typeof console !== "undefined" && console !== null ? console.log(msg) : void 0;
       }
     };
-    validationObj = (function() {
+    ValidationObj = (function() {
 
-      function validationObj(elem) {
+      function ValidationObj(elem) {
         this.elem = elem;
         this.data = this.elem.data();
         this.valFuncs = this.parseValFuncs();
@@ -36,12 +39,9 @@ $.fn.extend({
         if (settings.validateOnBlur) {
           this.startBlurValidation();
         }
-        if (settings.validateOnSubmit) {
-          this.startSubmitValidation();
-        }
       }
 
-      validationObj.prototype.parseValFuncs = function() {
+      ValidationObj.prototype.parseValFuncs = function() {
         var errexp, errfunc, func, message, succexp, succfunc, val, valFuncs, _ref, _ref1;
         valFuncs = {};
         _ref = this.data;
@@ -72,7 +72,7 @@ $.fn.extend({
         return valFuncs;
       };
 
-      validationObj.prototype.startKeyUpValidation = function() {
+      ValidationObj.prototype.startKeyUpValidation = function() {
         var valObj;
         valObj = this;
         return this.elem.on('keyup', function(e) {
@@ -94,7 +94,7 @@ $.fn.extend({
         });
       };
 
-      validationObj.prototype.startBlurValidation = function() {
+      ValidationObj.prototype.startBlurValidation = function() {
         var valObj;
         valObj = this;
         return this.elem.on('blur', function(e) {
@@ -106,11 +106,7 @@ $.fn.extend({
         });
       };
 
-      validationObj.prototype.startSubmitValidation = function() {
-        return console.log('submit validation stuff goes here');
-      };
-
-      validationObj.prototype.applyRules = function(eventFunc) {
+      ValidationObj.prototype.applyRules = function(eventFunc) {
         var funcName, funcObj, messages, _ref;
         messages = {
           success: [],
@@ -126,19 +122,42 @@ $.fn.extend({
           }
         }
         if (messages.failed.length === 0) {
-          return settings[eventFunc + 'Success'](this.elem, messages);
+          settings[eventFunc + 'Success'](this.elem, messages);
+          return true;
         } else {
-          return settings[eventFunc + 'Error'](this.elem, messages);
+          settings[eventFunc + 'Error'](this.elem, messages);
+          return false;
         }
       };
 
-      return validationObj;
+      return ValidationObj;
 
     })();
     return this.each(function() {
-      return $(this).find('input, select, textarea').each(function(i) {
-        return new validationObj($(this));
+      var applyAllRules, validationObjects;
+      validationObjects = [];
+      $(this).find('input, select, textarea').each(function(i) {
+        if ($(this).attr('type') !== 'submit') {
+          return validationObjects[i] = new ValidationObj($(this));
+        }
       });
+      if (settings.validateOnSubmit) {
+        $(this).on('submit', function(e) {
+          if (!applyAllRules(validationObjects) || !settings.useFormPOST) {
+            return e.preventDefault();
+          }
+        });
+      }
+      return applyAllRules = function(validationObjects) {
+        var valObj, _i, _len;
+        for (_i = 0, _len = validationObjects.length; _i < _len; _i++) {
+          valObj = validationObjects[_i];
+          if (!valObj.applyRules('onSubmitValidation')) {
+            return false;
+          }
+        }
+        return true;
+      };
     });
   }
 });

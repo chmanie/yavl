@@ -17,11 +17,15 @@ $.fn.extend
       onKeyUpValidationError: (elem, messages) ->
       onBlurValidationSuccess: (elem, messages) ->
       onBlurValidationError: (elem, messages) ->
+      onSubmitValidationSuccess: (elem, messages) ->
+      onSubmitValidationError: (elem, messages) ->
       onEmpty: (elem) ->
 
       validateOnKeyUp: false
       validateOnBlur: true
       validateOnSubmit: true
+
+      useFormPOST: true
 
     # Merge default settings with options.
     settings = $.extend settings, options
@@ -30,7 +34,7 @@ $.fn.extend
     log = (msg) ->
       console?.log msg if settings.debug
 
-    class validationObj
+    class ValidationObj
       constructor: (@elem) ->
         @data = @elem.data()
         @valFuncs = @parseValFuncs()
@@ -40,8 +44,6 @@ $.fn.extend
           @startKeyUpValidation()
         if settings.validateOnBlur
           @startBlurValidation()
-        if settings.validateOnSubmit
-          @startSubmitValidation()
 
       parseValFuncs: () ->
         valFuncs = {}
@@ -83,9 +85,6 @@ $.fn.extend
             valObj.applyRules('onBlurValidation')
           else
             settings.onEmpty(valObj.elem)
-
-      startSubmitValidation: () ->
-        console.log('submit validation stuff goes here')
       
       applyRules: (eventFunc) ->
         messages = 
@@ -98,15 +97,31 @@ $.fn.extend
             messages.success.push(funcObj.successmsg)
         if(messages.failed.length == 0)
           settings[eventFunc + 'Success'](@elem, messages)
+          return true
         else
           settings[eventFunc + 'Error'](@elem, messages)
+          return false
 
     
     # _Insert magic here._
     return @each ()->
+      validationObjects = []
       $(this).find('input, select, textarea').each((i) ->
-        new validationObj($(this))
+        if $(this).attr('type') != 'submit'
+          validationObjects[i] = new ValidationObj($(this))
       )
+
+      if settings.validateOnSubmit
+        $(this).on('submit', (e) ->
+          if(!applyAllRules(validationObjects) || !settings.useFormPOST)
+            e.preventDefault()
+        )
+
+      applyAllRules = (validationObjects) ->
+        for valObj in validationObjects
+          if !valObj.applyRules('onSubmitValidation')
+            return false
+        return true
 
 isInObj = (aKey, obj) ->
   for key, val of obj
