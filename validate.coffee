@@ -78,9 +78,9 @@ $.fn.extend
         # function is invoked on if validation of a specific element after submit was successful
       onSubmitElemValidationError: (elem, messages) ->
         # function is invoked on if validation of a specific element after submit caused an error
-      onSubmitValidationSuccess: () ->
+      onSubmitValidationSuccess: (form) ->
         # function is invoked if everything is fine after submit
-      onSubmitValidationError: () ->
+      onSubmitValidationError: (form) ->
         # function is invoked if there is one or more error in the form
       onEmpty: (elem) ->
         # function is invoked if element was emptied (after blur or keyUp)
@@ -106,8 +106,11 @@ $.fn.extend
         @valFuncs = @parseValFuncs()
         @minval = if @elem.data('minval')? then @elem.data('minval') else 0
         # start event listeners
+        
+        # --- VALIDATION ON KEYUP ---
         if settings.validateOnKeyUp
           @startKeyUpValidation()
+        # --- VALIDATION ON BLUR ---
         if settings.validateOnBlur
           @startBlurValidation()
 
@@ -129,6 +132,7 @@ $.fn.extend
           valFuncs[func] = (valConstraints[func](val)) if isInObj(func, valConstraints)
         return valFuncs
 
+      # --- VALIDATION ON KEYUP ---
       startKeyUpValidation: () ->
         valObj = @
         @elem.on 'keyup', (e) ->
@@ -140,10 +144,11 @@ $.fn.extend
             else 
               if minval?
                 if (valObj.elem.val().length >= parseInt(minval))
-                  valObj.applyRules('onKeyupValidation')
+                  valObj.applyRules('onKeyUpValidation')
               else
-                valObj.applyRules('onKeyupValidation')
+                valObj.applyRules('onKeyUpValidation')
       
+      # --- VALIDATION ON BLUR ---
       startBlurValidation: () ->
         valObj = @
         @elem.on 'blur', (e) ->
@@ -168,7 +173,6 @@ $.fn.extend
           settings[eventFunc + 'Error'](@elem, messages)
           return false
 
-    
     # _Insert magic here._
     return @each ()->
       validationObjects = []
@@ -176,22 +180,23 @@ $.fn.extend
         if $(this).attr('type') != 'submit'
           validationObjects[i] = new ValidationObj($(this))
       )
-
+      formObj = $(this)
+      # --- VALIDATION ON SUBMIT ---
       if settings.validateOnSubmit
         $(this).on('submit', (e) ->
           # apply rules to all elements
           if(!applyAllRules(validationObjects))
             # one or more element validations failed
             e.preventDefault()
-            settings.onSubmitValidationError()
+            settings.onSubmitValidationError(formObj)
           else
             if(!settings.useFormPOST)
               # user does not want to use the form's http POST
               e.preventDefault()
-              settings.onSubmitValidationSuccess()
+              settings.onSubmitValidationSuccess(formObj)
             else
               # invoke function when everything is fine
-              settings.onSubmitValidationSuccess()
+              settings.onSubmitValidationSuccess(formObj)
         )
 
       applyAllRules = (validationObjects) ->

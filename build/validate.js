@@ -111,8 +111,8 @@ $.fn.extend({
       onBlurValidationError: function(elem, messages) {},
       onSubmitElemValidationSuccess: function(elem, messages) {},
       onSubmitElemValidationError: function(elem, messages) {},
-      onSubmitValidationSuccess: function() {},
-      onSubmitValidationError: function() {},
+      onSubmitValidationSuccess: function(form) {},
+      onSubmitValidationError: function(form) {},
       onEmpty: function(elem) {},
       validateOnKeyUp: false,
       validateOnBlur: true,
@@ -183,10 +183,10 @@ $.fn.extend({
             } else {
               if (typeof minval !== "undefined" && minval !== null) {
                 if (valObj.elem.val().length >= parseInt(minval)) {
-                  return valObj.applyRules('onKeyupValidation');
+                  return valObj.applyRules('onKeyUpValidation');
                 }
               } else {
-                return valObj.applyRules('onKeyupValidation');
+                return valObj.applyRules('onKeyUpValidation');
               }
             }
           }
@@ -233,24 +233,25 @@ $.fn.extend({
 
     })();
     return this.each(function() {
-      var applyAllRules, validationObjects;
+      var applyAllRules, formObj, validationObjects;
       validationObjects = [];
       $(this).find('input, select, textarea').each(function(i) {
         if ($(this).attr('type') !== 'submit') {
           return validationObjects[i] = new ValidationObj($(this));
         }
       });
+      formObj = $(this);
       if (settings.validateOnSubmit) {
         $(this).on('submit', function(e) {
           if (!applyAllRules(validationObjects)) {
             e.preventDefault();
-            return settings.onSubmitValidationError();
+            return settings.onSubmitValidationError(formObj);
           } else {
             if (!settings.useFormPOST) {
               e.preventDefault();
-              return settings.onSubmitValidationSuccess();
+              return settings.onSubmitValidationSuccess(formObj);
             } else {
-              return settings.onSubmitValidationSuccess();
+              return settings.onSubmitValidationSuccess(formObj);
             }
           }
         });
