@@ -2,7 +2,58 @@
 
 # invoke:
 # $("form").validate
-#   debug: true
+
+if !valMessages?
+  valMessages = 
+    required:
+      successmsg: 'Well done!'
+      errormsg: 'I am sorry but this is required!'
+    minlength:
+      successmsg: 'You managed to meet the requirement of %s characters. Well done!'
+      errormsg: 'Sorry, minimal length is %s characters!'
+    email:
+      successmsg: 'Great!'
+      errormsg: 'This does not look like a valid E-Mail address to me'
+    fullname:
+      successmsg: 'Great!'
+      errormsg: 'Please provide a full name'
+    regexp:
+      successmsg: 'Great!'
+      errormsg: 'Something is wrong!'
+
+valConstraints =
+  required: () ->
+    valfun: (str) ->
+      return if str.length >= 1 then true else false
+    successmsg: valMessages.required.successmsg
+    errormsg: valMessages.required.errormsg
+  
+  minlength: (ml) ->
+    valfun: (str) ->
+      return if str.length >= parseInt(ml) then true else false
+    successmsg: parseMsg(valMessages.minlength.successmsg, ml)
+    errormsg: parseMsg(valMessages.minlength.errormsg, ml)
+
+  email: () ->
+    valfun: (str) ->
+      epx = /^(.*)@(.*)\.(.*)$/
+      return if str.match(exp)? then true else false
+    successmsg: valMessages.email.successmsg
+    errormsg: valMessages.email.errormsg
+
+  fullname: () ->
+    valfun: (str) ->
+      # Full name with hyphens, Umlauts and some other crazy letters
+      exp = /^[a-zA-ZàáâäãåèéêëìíîïòóôöõøùúûüÿýñçčšžÀÁÂÄÃÅÈÉÊËÌÍÎÏÒÓÔÖÕØÙÚÛÜŸÝÑßÇŒÆČŠŽ∂ð ,.'-]+$/
+      return if str.match(exp)? then true else false
+    successmsg: valMessages.fullname.successmsg
+    errormsg: valMessages.fullname.errormsg
+
+  regexp: (exp) ->
+    valfun: (str) ->
+      return if str.match(exp)? then true else false
+    successmsg: valMessages.regexp.successmsg
+    errormsg: valMessages.regexp.errormsg
 
 # Reference jQuery
 $ = jQuery
@@ -46,9 +97,6 @@ $.fn.extend
           @startBlurValidation()
 
       parseValFuncs: () ->
-        valFuncs = {}
-        for func, val of @data
-          valFuncs[func] = (constraints[func](val)) if isInObj(func, constraints)
         # override standard messages
         errexp = /^(.*)Errormsg$/
         succexp = /^(.*)Successmsg$/
@@ -57,10 +105,13 @@ $.fn.extend
           succfunc = message.match(succexp)
           if errfunc?
             if errfunc[1]?
-              valFuncs[errfunc[1]].errormsg = val
+              valMessages[errfunc[1]].errormsg = val
           if succfunc?
             if succfunc[1]?
-              valFuncs[succfunc[1]].successmsg = val
+              valMessages[succfunc[1]].successmsg = val
+        valFuncs = {}
+        for func, val of @data
+          valFuncs[func] = (valConstraints[func](val)) if isInObj(func, valConstraints)
         return valFuncs
 
       startKeyUpValidation: () ->
@@ -128,29 +179,9 @@ isInObj = (aKey, obj) ->
     return true if key == aKey
   return false
 
-constraints =
-  required: () ->
-    valfun: (str) ->
-      return if str.length >= 1 then true else false
-    successmsg: 'You were right, this is fuckin required'
-    errormsg: 'You have to fill this, man!'
-  
-  minlength: (ml) ->
-    valfun: (str) ->
-      return if str.length >= parseInt(ml) then true else false
-    successmsg: 'Yeah!'
-    errormsg: 'Sorry, minimal length is ' + ml + ' characters'
+parseMsg = (msg, param) ->
+  if msg.indexOf('%s') == -1
+    return msg
+  else 
+    return msg.split('%s')[0] + param + msg.split('%s')[1]
 
-  fullname: () ->
-    valfun: (str) ->
-      # Full name with hyphens, Umlauts and some other crazy letters
-      exp = /^[a-zA-ZàáâäãåèéêëìíîïòóôöõøùúûüÿýñçčšžÀÁÂÄÃÅÈÉÊËÌÍÎÏÒÓÔÖÕØÙÚÛÜŸÝÑßÇŒÆČŠŽ∂ð ,.'-]+$/
-      return if str.match(exp)? then true else false
-    successmsg: 'Great!'
-    errormsg: 'Please provide a full name.'
-
-  regexp: (exp) ->
-    valfun: (str) ->
-      return if str.match(exp)? then true else false
-    successmsg: 'Great!'
-    errormsg: 'Something is wrong!'
