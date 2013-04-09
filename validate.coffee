@@ -1,4 +1,6 @@
 # TODO: HTML5 validation?
+# TODO: Use jQuery events?
+
 
 # invoke:
 # $("form").validate
