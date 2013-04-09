@@ -1,0 +1,5 @@
+for 0.1.0:
+- use real JS (or jQ) events!
+- add default onVerification functions
+- add more standard validation functions
+- add (at least) english i18n
