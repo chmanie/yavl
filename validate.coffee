@@ -63,21 +63,31 @@ $ = jQuery
 # Adds plugin object to jQuery
 $.fn.extend
   validate: (options) ->
+
     # Default settings
     settings =
       debug: false
       onKeyUpValidationSuccess: (elem, messages) ->
         # function is invoked if KeyUp validation was successful
+        hideMessages(elem)
       onKeyUpValidationError: (elem, messages) ->
         # function is invoked if KeyUp validation caused an error
+        hideMessages(elem)
+        showMessages(elem, messages)
       onBlurValidationSuccess: (elem, messages) ->
         # function is invoked if validation after blur was successful
+        hideMessages(elem)
       onBlurValidationError: (elem, messages) ->
         # function is invoked if validation after caused an error
+        hideMessages(elem)
+        showMessages(elem, messages)
       onSubmitElemValidationSuccess: (elem, messages) ->
-        # function is invoked on if validation of a specific element after submit was successful
+        # function is invoked if validation of a specific element after submit was successful
+        hideMessages(elem)
       onSubmitElemValidationError: (elem, messages) ->
-        # function is invoked on if validation of a specific element after submit caused an error
+        # function is invoked if validation of a specific element after submit caused an error
+        hideMessages(elem)
+        showMessages(elem, messages)
       onSubmitValidationSuccess: (form) ->
         # function is invoked if everything is fine after submit
       onSubmitValidationError: (form) ->
@@ -93,8 +103,26 @@ $.fn.extend
       # you can specify your own actions on successful validation in onSubmitValidationSuccess()
       useFormPOST: true
 
+      # class names to apply on ul and li of error lists
+      ulClass: 'valUl'
+      liClass: 'valLi'
+
     # Merge default settings with options.
     settings = $.extend settings, options
+
+    hideMessages = (elem) ->
+      errorList = elem.next('ul')
+      errorList.remove()
+
+    showMessages = (elem, messages) ->
+      $messages = messages.failed.map(createLi)
+      errorList = $('<ul>').addClass(settings.ulClass)
+      for message in $messages
+        errorList.append(message)
+      errorList.insertAfter(elem)
+
+    createLi = (error) ->
+      return $('<li>' + error + '</li>').addClass(settings.liClass)
 
     # Simple logger.
     log = (msg) ->
@@ -217,4 +245,3 @@ parseMsg = (msg, param) ->
     return msg
   else 
     return msg.split('%s')[0] + param + msg.split('%s')[1]
-

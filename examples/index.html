@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>on('validate').js</title>
+  <script type="text/javascript" src="../build/jquery-1.9.0.min.js"></script>
+  <script type="text/javascript" src="../validate.js"></script>
+</head>
+<body>
+  <div>
+    <form>
+      <input type="text" name="email" data-email data-minlength="4">
+      <input type="submit" value="Send">
+  </div>
+</body>
+<script type="text/javascript">
+  $('form').validate({
+    validateOnKeyUp: true
+  });
+</script>
+</html>

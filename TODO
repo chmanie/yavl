@@ -1,4 +1,5 @@
 for 0.1.0:
+* add examples
 - use real JS (or jQ) events!
 - add default onVerification functions
 - add more standard validation functions
