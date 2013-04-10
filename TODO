@@ -1,5 +1,6 @@
 for 0.1.0:
 - add select, textarea, ratio and checkbox
+- glitch when pressing enter button and textbox is empty!!
 - let parseMsg use multiple parameters
 - add more standard validation functions
 - add (at least) english i18n

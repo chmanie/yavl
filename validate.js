@@ -180,10 +180,13 @@ $.fn.extend({
             this.startBlurValidation();
           }
         }
+        if (this.elem.is('select') || this.elem.is('checkbox')) {
+          this.startClickValidation();
+        }
       }
 
       ValidationObj.prototype.parseValFuncs = function() {
-        var errexp, errfunc, func, succexp, succfunc, val, valFuncs, valkey, value, _ref, _ref1;
+        var errexp, errfunc, func, succexp, succfunc, valFuncs, valkey, value, _ref, _ref1;
 
         errexp = /^(.*)Errormsg$/;
         succexp = /^(.*)Successmsg$/;
@@ -206,9 +209,9 @@ $.fn.extend({
         valFuncs = {};
         _ref1 = this.data;
         for (func in _ref1) {
-          val = _ref1[func];
+          value = _ref1[func];
           if (member(func, valConstraints)) {
-            valFuncs[func] = valConstraints[func](val);
+            valFuncs[func] = valConstraints[func](value);
           }
         }
         return valFuncs;
@@ -219,19 +222,15 @@ $.fn.extend({
 
         valObj = this;
         return this.elem.on('keyup', function(e) {
-          if (valObj.elem.val() === '') {
+          if (valObj.elem.val() === '' && e.which !== 13) {
             return settings.onEmpty(valObj.elem);
           } else {
-            if (e.which === 13 || e.which === 16) {
-              return e.preventDefault();
-            } else {
-              if (valObj.minval != null) {
-                if (valObj.elem.val().length >= parseInt(valObj.minval)) {
-                  return valObj.applyRules('onKeyUpValidation');
-                }
-              } else {
+            if (valObj.minval != null) {
+              if (valObj.elem.val().length >= parseInt(valObj.minval)) {
                 return valObj.applyRules('onKeyUpValidation');
               }
+            } else {
+              return valObj.applyRules('onKeyUpValidation');
             }
           }
         });
@@ -249,6 +248,8 @@ $.fn.extend({
           }
         });
       };
+
+      ValidationObj.prototype.startClickValidation = function() {};
 
       ValidationObj.prototype.applyRules = function(eventFunc) {
         var funcName, funcObj, messages, _ref;
@@ -296,10 +297,8 @@ $.fn.extend({
           } else {
             if (!settings.useFormPOST) {
               e.preventDefault();
-              return settings.onSubmitValidationSuccess(formObj);
-            } else {
-              return settings.onSubmitValidationSuccess(formObj);
             }
+            return settings.onSubmitValidationSuccess(formObj);
           }
         });
       }

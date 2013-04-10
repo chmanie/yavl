@@ -151,7 +151,8 @@ $.fn.extend
           @startClickValidation()
 
       parseValFuncs: () ->
-        # override standard messages
+        # override standard messages with self-defined ones in HTML attributes.
+        # e.g. <input data-validate-email-errormsg="Error in E-Mail!">
         errexp = /^(.*)Errormsg$/
         succexp = /^(.*)Successmsg$/
         for valkey, value of @data
@@ -164,25 +165,22 @@ $.fn.extend
             if succfunc[1]?
               valMessages[succfunc[1]].successmsg = value
         valFuncs = {}
-        for func, val of @data
-          valFuncs[func] = (valConstraints[func](val)) if member(func, valConstraints)
+        for func, value of @data
+          valFuncs[func] = (valConstraints[func](value)) if member(func, valConstraints)
         return valFuncs
 
       # --- VALIDATION ON KEYUP ---
       startKeyUpValidation: () ->
         valObj = @
         @elem.on 'keyup', (e) ->
-          if valObj.elem.val() == ''
+          if valObj.elem.val() == '' && e.which != 13
             settings.onEmpty(valObj.elem)
           else
-            if (e.which == 13 or e.which == 16)
-              e.preventDefault() # TODO: this does not work!
-            else 
-              if valObj.minval?
-                if (valObj.elem.val().length >= parseInt(valObj.minval))
-                  valObj.applyRules('onKeyUpValidation')
-              else
+            if valObj.minval?
+              if (valObj.elem.val().length >= parseInt(valObj.minval))
                 valObj.applyRules('onKeyUpValidation')
+            else
+              valObj.applyRules('onKeyUpValidation')
       
       # --- VALIDATION ON BLUR ---
       startBlurValidation: () ->
@@ -192,6 +190,9 @@ $.fn.extend
             valObj.applyRules('onBlurValidation')
           else
             settings.onEmpty(valObj.elem)
+
+      # --- VALIDATION ON CLICK ---
+      startClickValidation: () ->
       
       applyRules: (eventFunc) ->
         messages = 
@@ -230,10 +231,8 @@ $.fn.extend
             if(!settings.useFormPOST)
               # user does not want to use the form's http POST
               e.preventDefault()
-              settings.onSubmitValidationSuccess(formObj)
-            else
-              # invoke function when everything is fine
-              settings.onSubmitValidationSuccess(formObj)
+            # invoke function when everything is fine
+            settings.onSubmitValidationSuccess(formObj)
         )
 
       applyAllRules = (validationObjects) ->
