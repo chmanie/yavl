@@ -14,9 +14,6 @@ if !valMessages?
     email:
       successmsg: 'Great!'
       errormsg: 'This does not look like a valid E-Mail address to me'
-    fullname:
-      successmsg: 'Great!'
-      errormsg: 'Please provide a full name'
     regexp:
       successmsg: 'Great!'
       errormsg: 'Something is wrong!'
@@ -43,16 +40,9 @@ valConstraints =
     successmsg: valMessages.email.successmsg
     errormsg: valMessages.email.errormsg
 
-  fullname: () ->
-    valfun: (str) ->
-      # Full name with hyphens, Umlauts and some other crazy letters
-      exp = /^[a-zA-ZàáâäãåèéêëìíîïòóôöõøùúûüÿýñçčšžÀÁÂÄÃÅÈÉÊËÌÍÎÏÒÓÔÖÕØÙÚÛÜŸÝÑßÇŒÆČŠŽ∂ð ,.'-]+$/
-      return if str.match(exp)? then true else false
-    successmsg: valMessages.fullname.successmsg
-    errormsg: valMessages.fullname.errormsg
-
   regexp: (exp) ->
     valfun: (str) ->
+    # TODO: is exp a string or a regex obj? 
       return if str.match(exp)? then true else false
     successmsg: valMessages.regexp.successmsg
     errormsg: valMessages.regexp.errormsg
@@ -94,6 +84,7 @@ $.fn.extend
         # function is invoked if there is one or more error in the form
       onEmpty: (elem) ->
         # function is invoked if element was emptied (after blur or keyUp)
+        hideMessages(elem)
 
       validateOnKeyUp: false
       validateOnBlur: true
@@ -110,6 +101,7 @@ $.fn.extend
     # Merge default settings with options.
     settings = $.extend settings, options
 
+    # functions for default errorList DOM manipulation
     hideMessages = (elem) ->
       errorList = elem.next('ul')
       errorList.remove()
@@ -132,7 +124,7 @@ $.fn.extend
       constructor: (@elem) ->
         @data = @elem.data()
         @valFuncs = @parseValFuncs()
-        @minval = if @elem.data('minval')? then @elem.data('minval') else 0
+        @minval = @elem.data('minval') || 0
         # start event listeners
         
         # --- VALIDATION ON KEYUP ---

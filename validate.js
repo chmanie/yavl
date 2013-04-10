@@ -15,10 +15,6 @@ if (typeof valMessages === "undefined" || valMessages === null) {
       successmsg: 'Great!',
       errormsg: 'This does not look like a valid E-Mail address to me'
     },
-    fullname: {
-      successmsg: 'Great!',
-      errormsg: 'Please provide a full name'
-    },
     regexp: {
       successmsg: 'Great!',
       errormsg: 'Something is wrong!'
@@ -69,22 +65,6 @@ valConstraints = {
       errormsg: valMessages.email.errormsg
     };
   },
-  fullname: function() {
-    return {
-      valfun: function(str) {
-        var exp;
-
-        exp = /^[a-zA-ZàáâäãåèéêëìíîïòóôöõøùúûüÿýñçčšžÀÁÂÄÃÅÈÉÊËÌÍÎÏÒÓÔÖÕØÙÚÛÜŸÝÑßÇŒÆČŠŽ∂ð ,.'-]+$/;
-        if (str.match(exp) != null) {
-          return true;
-        } else {
-          return false;
-        }
-      },
-      successmsg: valMessages.fullname.successmsg,
-      errormsg: valMessages.fullname.errormsg
-    };
-  },
   regexp: function(exp) {
     return {
       valfun: function(str) {
@@ -131,7 +111,9 @@ $.fn.extend({
       },
       onSubmitValidationSuccess: function(form) {},
       onSubmitValidationError: function(form) {},
-      onEmpty: function(elem) {},
+      onEmpty: function(elem) {
+        return hideMessages(elem);
+      },
       validateOnKeyUp: false,
       validateOnBlur: true,
       validateOnSubmit: true,
@@ -170,7 +152,7 @@ $.fn.extend({
         this.elem = elem;
         this.data = this.elem.data();
         this.valFuncs = this.parseValFuncs();
-        this.minval = this.elem.data('minval') != null ? this.elem.data('minval') : 0;
+        this.minval = this.elem.data('minval') || 0;
         if (settings.validateOnKeyUp) {
           this.startKeyUpValidation();
         }
