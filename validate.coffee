@@ -5,47 +5,48 @@
 
 if !valMessages?
   valMessages = 
-    required:
-      successmsg: 'Well done!'
+    validateRequired:
+      successmsg: ''
       errormsg: 'I am sorry but this is required!'
-    minlength:
-      successmsg: 'You managed to meet the requirement of %s characters. Well done!'
+    validateMinlength:
+      successmsg: ''
       errormsg: 'Sorry, minimal length is %s characters!'
-    email:
-      successmsg: 'Great!'
+    validateEmail:
+      successmsg: ''
       errormsg: 'This does not look like a valid E-Mail address to me'
-    regexp:
-      successmsg: 'Great!'
+    validateRegexp:
+      successmsg: ''
       errormsg: 'Something is wrong!'
 
 valConstraints =
-  required: () ->
+  validateRequired: () ->
     valfun: (str) ->
+      # since this is validateRequired str.length has to be > 0
       return if str.length >= 1 then true else false
-    successmsg: valMessages.required.successmsg
-    errormsg: valMessages.required.errormsg
+    successmsg: valMessages.validateRequired.successmsg
+    errormsg: valMessages.validateRequired.errormsg
   
-  minlength: (ml) ->
+  validateMinlength: (ml) ->
     valfun: (str) ->
       return if str.length >= parseInt(ml) then true else false
-    successmsg: parseMsg(valMessages.minlength.successmsg, ml)
-    errormsg: parseMsg(valMessages.minlength.errormsg, ml)
+    successmsg: parseMsg(valMessages.validateMinlength.successmsg, ml)
+    errormsg: parseMsg(valMessages.validateMinlength.errormsg, ml)
 
-  email: () ->
+  validateEmail: () ->
     valfun: (str) ->
       # very simple regex for email validation
       # read: http://davidcel.is/blog/2012/09/06/stop-validating-email-addresses-with-regex/
       exp = /^(.{1,})@(.{1,})\.(.{1,})$/
       return if str.match(exp)? then true else false
-    successmsg: valMessages.email.successmsg
-    errormsg: valMessages.email.errormsg
+    successmsg: valMessages.validateEmail.successmsg
+    errormsg: valMessages.validateEmail.errormsg
 
-  regexp: (exp) ->
+  validateRegexp: (exp) ->
     valfun: (str) ->
     # TODO: is exp a string or a regex obj? 
       return if str.match(exp)? then true else false
-    successmsg: valMessages.regexp.successmsg
-    errormsg: valMessages.regexp.errormsg
+    successmsg: valMessages.validateRegexp.successmsg
+    errormsg: valMessages.validateRegexp.errormsg
 
 # Reference jQuery
 $ = jQuery
@@ -138,15 +139,16 @@ $.fn.extend
         # override standard messages
         errexp = /^(.*)Errormsg$/
         succexp = /^(.*)Successmsg$/
-        for message, val of @data
-          errfunc = message.match(errexp)
-          succfunc = message.match(succexp)
+        console.log @data
+        for valkey, value of @data
+          errfunc = valkey.match(errexp)
+          succfunc = valkey.match(succexp)
           if errfunc?
             if errfunc[1]?
-              valMessages[errfunc[1]].errormsg = val
+              valMessages[errfunc[1]].errormsg = value
           if succfunc?
             if succfunc[1]?
-              valMessages[succfunc[1]].successmsg = val
+              valMessages[succfunc[1]].successmsg = value
         valFuncs = {}
         for func, val of @data
           valFuncs[func] = (valConstraints[func](val)) if isInObj(func, valConstraints)

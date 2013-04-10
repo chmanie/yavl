@@ -3,27 +3,27 @@ var $, isInObj, parseMsg, valConstraints, valMessages;
 
 if (typeof valMessages === "undefined" || valMessages === null) {
   valMessages = {
-    required: {
-      successmsg: 'Well done!',
+    validateRequired: {
+      successmsg: '',
       errormsg: 'I am sorry but this is required!'
     },
-    minlength: {
-      successmsg: 'You managed to meet the requirement of %s characters. Well done!',
+    validateMinlength: {
+      successmsg: '',
       errormsg: 'Sorry, minimal length is %s characters!'
     },
-    email: {
-      successmsg: 'Great!',
+    validateEmail: {
+      successmsg: '',
       errormsg: 'This does not look like a valid E-Mail address to me'
     },
-    regexp: {
-      successmsg: 'Great!',
+    validateRegexp: {
+      successmsg: '',
       errormsg: 'Something is wrong!'
     }
   };
 }
 
 valConstraints = {
-  required: function() {
+  validateRequired: function() {
     return {
       valfun: function(str) {
         if (str.length >= 1) {
@@ -32,11 +32,11 @@ valConstraints = {
           return false;
         }
       },
-      successmsg: valMessages.required.successmsg,
-      errormsg: valMessages.required.errormsg
+      successmsg: valMessages.validateRequired.successmsg,
+      errormsg: valMessages.validateRequired.errormsg
     };
   },
-  minlength: function(ml) {
+  validateMinlength: function(ml) {
     return {
       valfun: function(str) {
         if (str.length >= parseInt(ml)) {
@@ -45,11 +45,11 @@ valConstraints = {
           return false;
         }
       },
-      successmsg: parseMsg(valMessages.minlength.successmsg, ml),
-      errormsg: parseMsg(valMessages.minlength.errormsg, ml)
+      successmsg: parseMsg(valMessages.validateMinlength.successmsg, ml),
+      errormsg: parseMsg(valMessages.validateMinlength.errormsg, ml)
     };
   },
-  email: function() {
+  validateEmail: function() {
     return {
       valfun: function(str) {
         var exp;
@@ -61,11 +61,11 @@ valConstraints = {
           return false;
         }
       },
-      successmsg: valMessages.email.successmsg,
-      errormsg: valMessages.email.errormsg
+      successmsg: valMessages.validateEmail.successmsg,
+      errormsg: valMessages.validateEmail.errormsg
     };
   },
-  regexp: function(exp) {
+  validateRegexp: function(exp) {
     return {
       valfun: function(str) {
         if (str.match(exp) != null) {
@@ -74,8 +74,8 @@ valConstraints = {
           return false;
         }
       },
-      successmsg: valMessages.regexp.successmsg,
-      errormsg: valMessages.regexp.errormsg
+      successmsg: valMessages.validateRegexp.successmsg,
+      errormsg: valMessages.validateRegexp.errormsg
     };
   }
 };
@@ -162,23 +162,24 @@ $.fn.extend({
       }
 
       ValidationObj.prototype.parseValFuncs = function() {
-        var errexp, errfunc, func, message, succexp, succfunc, val, valFuncs, _ref, _ref1;
+        var errexp, errfunc, func, succexp, succfunc, val, valFuncs, valkey, value, _ref, _ref1;
 
         errexp = /^(.*)Errormsg$/;
         succexp = /^(.*)Successmsg$/;
+        console.log(this.data);
         _ref = this.data;
-        for (message in _ref) {
-          val = _ref[message];
-          errfunc = message.match(errexp);
-          succfunc = message.match(succexp);
+        for (valkey in _ref) {
+          value = _ref[valkey];
+          errfunc = valkey.match(errexp);
+          succfunc = valkey.match(succexp);
           if (errfunc != null) {
             if (errfunc[1] != null) {
-              valMessages[errfunc[1]].errormsg = val;
+              valMessages[errfunc[1]].errormsg = value;
             }
           }
           if (succfunc != null) {
             if (succfunc[1] != null) {
-              valMessages[succfunc[1]].successmsg = val;
+              valMessages[succfunc[1]].successmsg = value;
             }
           }
         }

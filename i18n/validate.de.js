@@ -10,7 +10,7 @@ valMessages = {
     successmsg: '',
     errormsg: 'Bitte gib mindestens %s Zeichen ein.'
   },
-  email: { 
+  validateEmail: { 
     successmsg: '',
     errormsg: 'Hoppla! Das sieht nicht wie eine E-Mail Adresse aus!'
   },
