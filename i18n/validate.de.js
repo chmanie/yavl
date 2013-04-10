@@ -2,11 +2,11 @@
 // by Christian Maniewski
 
 valMessages = {
-  required: {
+  validateRequired: {
     successmsg: '',
     errormsg: 'Dieses Feld musst Du bitte ausfüllen!'
   },
-  minlength: {
+  validateLength: {
     successmsg: '',
     errormsg: 'Bitte gib mindestens %s Zeichen ein.'
   },
@@ -14,7 +14,7 @@ valMessages = {
     successmsg: '',
     errormsg: 'Hoppla! Das sieht nicht wie eine E-Mail Adresse aus!'
   },
-  regexp: {
+  validateRegexp: {
     successmsg: '',
     errormsg: 'Hoppla! Irgendetwas stimmt nicht!'
   }

@@ -1,5 +1,6 @@
 for 0.1.0:
-* use real JS (or jQ) events
+- add select, textarea, ratio and checkbox
+- let parseMsg use multiple parameters
 - add more standard validation functions
 - add (at least) english i18n
 - add examples

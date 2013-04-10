@@ -8,9 +8,12 @@ if !valMessages?
     validateRequired:
       successmsg: ''
       errormsg: 'I am sorry but this is required!'
-    validateMinlength:
+    validateRangeLength:
       successmsg: ''
-      errormsg: 'Sorry, minimal length is %s characters!'
+      errormsg: 'Sorry, the length is meant to be between %s and %s characters!'
+    validateMinLength:
+      successmsg: ''
+      errormsg: 'Please provide at least %s characters'
     validateEmail:
       successmsg: ''
       errormsg: 'This does not look like a valid E-Mail address to me'
@@ -25,12 +28,18 @@ valConstraints =
       return if str.length >= 1 then true else false
     successmsg: valMessages.validateRequired.successmsg
     errormsg: valMessages.validateRequired.errormsg
-  
-  validateMinlength: (ml) ->
+
+  validateRangeLength: (ml) ->
     valfun: (str) ->
-      return if str.length >= parseInt(ml) then true else false
-    successmsg: parseMsg(valMessages.validateMinlength.successmsg, ml)
-    errormsg: parseMsg(valMessages.validateMinlength.errormsg, ml)
+      return if ml[0] <= str.length <= ml[1] then true else false
+    successmsg: parseMsg(valMessages.validateRangeLength.successmsg, ml)
+    errormsg: parseMsg(valMessages.validateRangeLength.errormsg, ml)
+
+  validateMinLength: (rl) ->
+    valfun: (str) ->
+      return if str.length >= parseInt(rl) then true else false
+    successmsg: parseMsg(valMessages.validateMinLength.successmsg, rl)
+    errormsg: parseMsg(valMessages.validateMinLength.errormsg, rl)
 
   validateEmail: () ->
     valfun: (str) ->
@@ -125,21 +134,26 @@ $.fn.extend
       constructor: (@elem) ->
         @data = @elem.data()
         @valFuncs = @parseValFuncs()
-        @minval = @elem.data('minval') || 0
+        @minval = @elem.data('validate-minval') || 0
         # start event listeners
         
-        # --- VALIDATION ON KEYUP ---
-        if settings.validateOnKeyUp
-          @startKeyUpValidation()
-        # --- VALIDATION ON BLUR ---
-        if settings.validateOnBlur
-          @startBlurValidation()
+        # keyup and blur validation for input and textarea elements
+        if @elem.is('input') or @elem.is('textarea')
+          # --- VALIDATION ON KEYUP ---
+          if settings.validateOnKeyUp
+            @startKeyUpValidation()
+          # --- VALIDATION ON BLUR ---
+          if settings.validateOnBlur
+            @startBlurValidation()
+        
+        # click validation for select and checkbox elements
+        if @elem.is('select') or @elem.is('checkbox')
+          @startClickValidation()
 
       parseValFuncs: () ->
         # override standard messages
         errexp = /^(.*)Errormsg$/
         succexp = /^(.*)Successmsg$/
-        console.log @data
         for valkey, value of @data
           errfunc = valkey.match(errexp)
           succfunc = valkey.match(succexp)
@@ -151,7 +165,7 @@ $.fn.extend
               valMessages[succfunc[1]].successmsg = value
         valFuncs = {}
         for func, val of @data
-          valFuncs[func] = (valConstraints[func](val)) if isInObj(func, valConstraints)
+          valFuncs[func] = (valConstraints[func](val)) if member(func, valConstraints)
         return valFuncs
 
       # --- VALIDATION ON KEYUP ---
@@ -164,8 +178,8 @@ $.fn.extend
             if (e.which == 13 or e.which == 16)
               e.preventDefault() # TODO: this does not work!
             else 
-              if minval?
-                if (valObj.elem.val().length >= parseInt(minval))
+              if valObj.minval?
+                if (valObj.elem.val().length >= parseInt(valObj.minval))
                   valObj.applyRules('onKeyUpValidation')
               else
                 valObj.applyRules('onKeyUpValidation')
@@ -203,6 +217,7 @@ $.fn.extend
           validationObjects[i] = new ValidationObj($(this))
       )
       formObj = $(this)
+      
       # --- VALIDATION ON SUBMIT ---
       if settings.validateOnSubmit
         $(this).on('submit', (e) ->
@@ -229,13 +244,24 @@ $.fn.extend
         # false if one or more validations failed
         return success
 
-isInObj = (aKey, obj) ->
-  for key, val of obj
-    return true if key == aKey
+member = (aKey, obj) ->
+  # checks for element if array or key if object
+  if Array.isArray(obj)
+    for elem in obj
+      return true if elem == aKey
+  else
+    for key, val of obj
+      return true if key == aKey
   return false
 
-parseMsg = (msg, param) ->
+parseMsg = (msg, params) ->
   if msg.indexOf('%s') == -1
     return msg
-  else 
-    return msg.split('%s')[0] + param + msg.split('%s')[1]
+  else
+    if typeof(params) is 'object'
+      message = msg.split('%s')[0]
+      for param, i in params
+        message += param + msg.split('%s')[i+1]
+      return message
+    else
+      return msg.split('%s')[0] + params + msg.split('%s')[1]
